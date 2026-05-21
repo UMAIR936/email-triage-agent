@@ -179,12 +179,3 @@ tests/
 - [ ] Replace polling with real Pub/Sub in production
 - [ ] Add Stripe billing to turn this into a SaaS
 
----
-
-## Interview talking points
-
-> "I built a multi-node LangGraph agent that classifies, routes, and drafts email replies — with conditional edges in the graph encoding the business logic."
-
-> "I tested non-deterministic LLM output using three layers: structural assertions for format correctness, semantic checks from fixture constraints, and LLM-as-judge scoring averaged across a golden dataset."
-
-> "The style learning uses exponential moving average to update formality scores from edits, and diffs removed phrases into an avoid-list — so the agent gets better the more you use it."
