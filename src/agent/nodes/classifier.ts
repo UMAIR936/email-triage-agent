@@ -1,11 +1,13 @@
-// src/agent/nodes/classifier.ts
 // Reads the email and produces a Classification object.
 // This is a simple LLM call — no tools needed.
 
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { AgentState, Classification } from '../state'
 
-const client = new Anthropic()
+const client = new OpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY,
+})
 
 export async function classifierNode(state: AgentState): Promise<Partial<AgentState>> {
   const { email } = state
@@ -34,13 +36,12 @@ Rules:
 - action=defer: can wait more than 3 days
 - action=archive: newsletters, automated emails, no reply needed`
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+  const response = await client.chat.completions.create({
+    model: 'openai/gpt-4.1-mini',
     max_tokens: 300,
     messages: [{ role: 'user', content: prompt }],
   })
-
-  const text = response.content[0].type === 'text' ? response.content[0].text : ''
+  const text = response.choices[0].message.content ?? ''
 
   try {
     const classification: Classification = JSON.parse(text.trim())

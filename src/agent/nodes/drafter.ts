@@ -1,11 +1,13 @@
-// src/agent/nodes/drafter.ts
 // Generates an email reply using the user's style profile.
 // This is the most important node — quality here = quality of the whole system.
 
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { AgentState } from '../state'
 
-const client = new Anthropic()
+const client = new OpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY,
+})
 
 export async function drafterNode(state: AgentState): Promise<Partial<AgentState>> {
   const { email, classification, styleContext } = state
@@ -35,13 +37,12 @@ RULES:
 
 Reply:`
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 500,
+  const response = await client.chat.completions.create({
+    model: 'openai/gpt-4.1-mini',
+    max_tokens: 300,
     messages: [{ role: 'user', content: prompt }],
   })
-
-  const draft = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+  const draft = response.choices[0].message.content ?? ''
 
   return { draft }
 }
