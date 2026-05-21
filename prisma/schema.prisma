@@ -1,0 +1,69 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  accessToken  String       // encrypted Gmail OAuth token
+  refreshToken String       // encrypted Gmail OAuth refresh token
+  historyId    String?      // last processed Gmail historyId
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  styleProfile StyleProfile?
+  feedbackLogs FeedbackLog[]
+  processedEmails ProcessedEmail[]
+}
+
+model StyleProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+
+  greeting          String   @default("Hi")
+  signoff           String   @default("Best")
+  formalityScore    Float    @default(0.5)   // 0 = casual, 1 = formal
+  avgSentenceLength Int      @default(15)
+  commonPhrases     String[] @default([])
+  avoidPhrases      String[] @default([])
+  exampleReplies    Json[]   @default([])    // { original, draft, edited }
+
+  updatedAt         DateTime @updatedAt
+}
+
+model FeedbackLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  emailId     String
+  draft       String
+  action      String   // "approve" | "edit" | "reject"
+  editedText  String?  // only if action = "edit"
+
+  createdAt   DateTime @default(now())
+}
+
+model ProcessedEmail {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+
+  gmailMessageId String   @unique
+  threadId       String
+  subject        String
+  from           String
+  classification Json     // { urgency, category, action, intent }
+  draft          String?
+  status         String   @default("pending") // "pending" | "approved" | "sent" | "rejected"
+
+  createdAt      DateTime @default(now())
+}
